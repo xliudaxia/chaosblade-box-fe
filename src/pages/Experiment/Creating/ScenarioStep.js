@@ -188,7 +188,7 @@ class ScenarioStep extends React.Component {
     }
 
     getScenarioParameterValues() {
-        const {scenarioSelected} = this.props;
+        const {scenarioSelected, dimension, machinesSelected} = this.props;
         if (scenarioSelected === null) {
             return {};
         }
@@ -199,6 +199,20 @@ class ScenarioStep extends React.Component {
         scenarioSelected.parameters.map(param => {
             params[param.name] = param.value
         });
+        // TODO 需要考虑不同 namespace 的情况
+        if (!_.isEmpty(machinesSelected)) {
+            const machine = machinesSelected[0];
+            switch (dimension) {
+                case "pod":
+                    if (!_.isEmpty(machine.pods)) {
+                        params["names"]=machine.pods;
+                    }
+                    if (!_.isEmpty(machine.namespace)) {
+                        params["namespace"]=machine.namespace;
+                    }
+                    break;
+            }
+        }
         return params;
     }
 
@@ -306,6 +320,7 @@ const mapStateToProps = state => {
         page: experiment.scenarios.page,
         pageSize: experiment.scenarios.pageSize,
         total: experiment.scenarios.total,
+        machinesSelected: experiment.machinesSelected
     }
 }
 

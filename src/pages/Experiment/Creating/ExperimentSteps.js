@@ -24,6 +24,7 @@ import ScenarioStep from "./ScenarioStep";
 import MonitorStep from "./MonitorStep";
 import NameStep from "./NameStep";
 import _ from "lodash";
+import {ScenarioConstants} from "../../../constants/ScenarioConstants";
 
 const {Step} = Steps;
 
@@ -59,6 +60,9 @@ class ExperimentSteps extends React.Component {
         this.setState({current});
     }
 
+    machineEvent = child => {
+        this._machine = child;
+    }
     scenarioEvent = child => {
         this._scenario = child;
     }
@@ -78,6 +82,9 @@ class ExperimentSteps extends React.Component {
     onCreatingNext = () => {
         const current = this.state.current + 1;
         switch (current) {
+            // case 1:
+            //     this._machine.onFinish(this.changeCurrent.bind(this, current));
+            //     break;
             case 2:
                 this._scenario.onFinish(this.changeCurrent.bind(this, current));
                 break;
@@ -117,16 +124,20 @@ class ExperimentSteps extends React.Component {
             collect,
             scenarioCategoryIdSelected
         } = this.props;
+        let machines = [];
+        if (dimension === ScenarioConstants.SUPPORT_HOST_SCOPE.desc) {
+            machines = this.getMachines();
+        }
         createExperiment({
             categoryId: scenarioCategoryIdSelected,
             scenarioId: scenarioSelected.scenarioId,
             parameters: scenarioSelected.parameters,
             metrics: metricSelected ? [metricSelected] : [],
             experimentName,
-            machines: this.getMachines(),
+            machines,
             dimension,
             collect,
-        })
+        });
     }
 
 
@@ -140,6 +151,10 @@ class ExperimentSteps extends React.Component {
             collect,
             scenarioCategoryIdSelected
         } = this.props;
+        let machines = [];
+        if (dimension === ScenarioConstants.SUPPORT_HOST_SCOPE.desc) {
+            machines = this.getMachines();
+        }
         updateExperiment({
             experimentId: ExperimentCreating.getExperimentId(),
             categoryId: scenarioCategoryIdSelected,
@@ -147,7 +162,7 @@ class ExperimentSteps extends React.Component {
             parameters: scenarioSelected.parameters,
             metrics: metricSelected ? [metricSelected] : [],
             experimentName,
-            machines: this.getMachines(),
+            machines,
             dimension,
             collect,
         })
@@ -168,9 +183,21 @@ class ExperimentSteps extends React.Component {
                     }
                 </Steps>
                 <div className={styles.stepContent}>
-                    <div className={current === 0 ? styles.fadeIn : styles.step}>
-                        {machineStep}
-                    </div>
+                    {
+                        current === 0 ?
+                            <div className={styles.fadeIn}>
+                                {
+                                    // React.cloneElement(
+                                    //     machineStep,
+                                    //     {dimension, current, event: this.machineEvent}
+                                    // )
+                                    // // <Element dimension={dimension} current={current} event={this.machineEvent}/>
+                                    machineStep
+                                }
+                            </div>
+                            :
+                            <div className={styles.step}></div>
+                    }
                     {
                         current === 1 ?
                             <div className={styles.fadeIn}>

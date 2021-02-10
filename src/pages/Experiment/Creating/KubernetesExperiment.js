@@ -17,7 +17,7 @@
 import React from "react";
 import Actions from "../../../actions/Actions";
 import {AndroidOutlined, AppleOutlined, QuestionCircleOutlined} from "@ant-design/icons";
-import {Alert, Divider, Form, Input, Layout, Menu, Tabs, Tooltip} from "antd";
+import {Alert, Button, Form, Input, Layout, Menu, Tabs, Tooltip} from "antd";
 import {connect} from "react-redux";
 import ExperimentSteps from "./ExperimentSteps";
 import MachineStep from "./MachineStep";
@@ -42,13 +42,13 @@ const EnableCollectAlert =
 const DisableCollectAlert =
     <Alert style={{textAlign: "center"}} message="数据采集没有开启，需要手动填写演练资源目标" type="warning" showIcon closable/>;
 
+const defaultActive = "pod";
 
 class KubernetesExperiment extends React.Component {
 
     constructor() {
         super();
         this.state = {
-            targetStepCurrent: 0,
             podNamespace: "",
             podNames: "",
             containerNames: "",
@@ -67,13 +67,14 @@ class KubernetesExperiment extends React.Component {
             podPage,
             podPageSize,
             nodePage,
-            nodePageSize
+            nodePageSize,
+            onDimensionChanged,
         } = this.props
         queryCollectStatus();
         getClusterInfo();
         getPodsPageable({page: podPage, pageSize: podPageSize});
         getNodesPageable({page: nodePage, pageSize: nodePageSize});
-
+        onDimensionChanged({dimension: defaultActive});
     }
 
     podNamespaceValueChange = (value) => {
@@ -98,11 +99,15 @@ class KubernetesExperiment extends React.Component {
     }
 
     onFinish = (values) => {
-        // 表单填写
-        // machine 是执行的探针
+        const machine = {
+            namespace: values.namespace,
+            pods: values.pods,
+            containerName: values.containerName,
+            containerIndex: values.containerIndex,
+        }
+        const {onMachinesChanged} = this.props;
+        onMachinesChanged({machines: [machine]});
     }
-
-    // 从 Pod 中获取 containers
 
     collectContainersEnabledRender = () => {
         const {podPage, podPageSize, podTotal, containers, getPodsPageable} = this.props;
@@ -167,6 +172,9 @@ class KubernetesExperiment extends React.Component {
                                rules={[{required: false}]}>
                         <Input onChange={this.containerNamesValueChange}/>
                     </Form.Item>
+                    <Form.Item>
+                        <Button type="primary" htmlType="submit">提交（临时方案）</Button>
+                    </Form.Item>
                 </Form>
             </div>
         )
@@ -198,7 +206,6 @@ class KubernetesExperiment extends React.Component {
     collectNodesEnabledRender = () => {
         const {nodePage, nodePageSize, nodeTotal, nodes, getNodesPageable} = this.props;
         return (
-
             <MachineStep
                 machines={nodes}
                 pagination={GenPagination(nodePage, nodePageSize, nodeTotal,
@@ -235,7 +242,7 @@ class KubernetesExperiment extends React.Component {
     machinesRender = () => {
         const {collect} = this.props;
         return (
-            <Tabs defaultActiveKey="pod" onChange={this.onTargetTabChange}>
+            <Tabs defaultActiveKey={defaultActive} onChange={this.onTargetTabChange}>
                 <TabPane tab={<span><AndroidOutlined/>创建 Container 实验</span>} key="container">
                     {
                         collect ? this.collectContainersEnabledRender() : this.collectContainersDisabledRender()
@@ -256,14 +263,14 @@ class KubernetesExperiment extends React.Component {
     }
 
     onTargetTabChange = current => {
-        this.setState({targetStepCurrent: current});
+        const {onDimensionChanged} = this.props;
+        onDimensionChanged({dimension: current});
     }
 
     render() {
-        const {targetStepCurrent} = this.state;
-        const {collect} = this.props;
+        const {collect, dimension} = this.props;
         return (
-            <ExperimentSteps dimension={targetStepCurrent}
+            <ExperimentSteps dimension={dimension}
                              machineStep={
                                  <div>
                                      {collect ? EnableCollectAlert : DisableCollectAlert}
@@ -290,6 +297,7 @@ const mapStateToProps = state => {
         nodeTotal: nodes.total,
         nodes: nodes.machines,
         collect: experiment.collect,
+        dimension: experiment.disabled,
     }
 }
 
@@ -300,6 +308,8 @@ const mapDispatchToProps = dispatch => {
         getPodsPageable: query => dispatch(Actions.getMachinesForPodPageable(query)),
         getNodesPageable: query => dispatch(Actions.getMachinesForNodePageable(query)),
         queryCollectStatus: () => dispatch(Actions.queryCollectStatus()),
+        onDimensionChanged: dimension => dispatch(Actions.onDimensionChanged(dimension)),
+        onMachinesChanged: machines => dispatch(Actions.onMachinesChanged(machines))
     }
 }
 
