@@ -81,7 +81,7 @@ class ExperimentCreating extends React.Component {
         const {dimension, clearResult, onDimensionChanged} = this.props;
         if (key !== dimension) {
             // clearResult();
-            onDimensionChanged(key);
+            onDimensionChanged({dimension: key});
         }
     }
 
@@ -141,7 +141,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         clearResult: () => dispatch(Actions.clearExperimentCreatingResult()),
-        onDimensionChanged: dimension => dispatch(Actions.onDimensionChanged()),
+        onDimensionChanged: dimension => dispatch(Actions.onDimensionChanged(dimension)),
     }
 }
 
