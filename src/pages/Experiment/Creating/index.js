@@ -27,6 +27,7 @@ import linuxLogo from '../../../assets/images/experiment/linux.svg'
 import kubernetesLogo from '../../../assets/images/experiment/kubernetes.svg'
 import applicationLogo from '../../../assets/images/experiment/application.svg'
 import styles from './index.module.scss';
+import KubernetesExperiment from "./KubernetesExperiment";
 
 const {TabPane} = Tabs
 
@@ -43,8 +44,8 @@ const ExperimentDimensions = [
         key: "kubernetes",
         imgAlt: "kubernetes",
         imgSrc: kubernetesLogo,
-        // content: <KubernetesExperiment/>,
-        content: <h1>敬请期待...</h1>,
+        content: <KubernetesExperiment/>,
+        // content: <h1>敬请期待...</h1>,
     },
     {
         title: "page.experiment.creating.application.dimension.name",
