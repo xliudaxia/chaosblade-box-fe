@@ -44,8 +44,8 @@ class ScenarioStep extends React.Component {
     }
 
     componentDidMount() {
-        const {getScenarioCategories, event} = this.props;
-        getScenarioCategories();
+        const {getScenarioCategories, event, dimension} = this.props;
+        getScenarioCategories({dimension});
         this.creatingFromScenario();
         event(this);
     }

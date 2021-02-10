@@ -171,15 +171,30 @@ class ExperimentSteps extends React.Component {
                     <div className={current === 0 ? styles.fadeIn : styles.step}>
                         {machineStep}
                     </div>
-                    <div className={current === 1 ? styles.fadeIn : styles.step}>
-                        <ScenarioStep dimension={dimension} current={current} event={this.scenarioEvent}/>
-                    </div>
-                    <div className={current === 2 ? styles.fadeIn : styles.step}>
-                        <MonitorStep dimension={dimension} current={current} event={this.monitorEvent}/>
-                    </div>
-                    <div className={current === 3 ? styles.fadeIn : styles.step}>
-                        <NameStep dimension={dimension} current={current}/>
-                    </div>
+                    {
+                        current === 1 ?
+                            <div className={styles.fadeIn}>
+                                <ScenarioStep dimension={dimension} current={current} event={this.scenarioEvent}/>
+                            </div>
+                            :
+                            <div className={styles.step}></div>
+                    }
+                    {
+                        current === 2 ?
+                            <div className={styles.fadeIn}>
+                                <MonitorStep dimension={dimension} current={current} event={this.monitorEvent}/>
+                            </div>
+                            :
+                            <div className={styles.step}></div>
+                    }
+                    {
+                        current === 3 ?
+                            <div className={styles.fadeIn}>
+                                <NameStep dimension={dimension} current={current}/>
+                            </div>
+                            :
+                            <div className={styles.step}></div>
+                    }
                 </div>
                 <Divider dashed/>
                 <div className={styles.stepsAction}>

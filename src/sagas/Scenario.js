@@ -37,7 +37,7 @@ export default () => {
             timeout: delay(NetworkConstants.TIMEOUT_INTERVAL)
         });
 
-        let error ;
+        let error;
         if (timeout) {
             error = Errors.TIMEOUT_ERROR;
         } else {
@@ -142,14 +142,14 @@ export default () => {
 
     function* watchScenarioCategoriesFetching() {
         while (true) {
-            yield take(Types.GET_SCENARIO_CATEGORIES);
-            yield fork(getScenarioCategories)
+            const {query} = yield take(Types.GET_SCENARIO_CATEGORIES);
+            yield fork(getScenarioCategories, query)
         }
     }
 
-    function* getScenarioCategories() {
+    function* getScenarioCategories(query) {
         const {response, timeout} = yield race({
-            response: call(ScenarioApi.getScenarioCategories),
+            response: call(ScenarioApi.getScenarioCategories, query),
             timeout: delay(NetworkConstants.TIMEOUT_INTERVAL)
         });
         let error;
