@@ -75,6 +75,7 @@ class ExperimentCreating extends React.Component {
             clearResult();
             history.push(`/experiment/detail/?${request.generateUrlSearch({id: experimentId})}`);
         }
+        return null;
     }
 
     onTabChange(key) {

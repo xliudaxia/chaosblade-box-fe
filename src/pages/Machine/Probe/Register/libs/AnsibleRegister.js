@@ -34,6 +34,7 @@ class AnsibleRegister extends React.Component {
         this.state = {
             current: 0,
             appSwitch: false,
+            bladeDeployedSwitch: true,
             formVisible: false,
             selectedRowKeys: [],
             loading: false,
@@ -51,25 +52,42 @@ class AnsibleRegister extends React.Component {
     }
 
     applicationSwitch = (checked) => {
-        this.setState({appSwitch: checked})
+        this.setState({appSwitch: checked});
+    }
+
+    bladeDeployedSwitch = checked => {
+        this.setState({bladeDeployedSwitch: checked});
+    };
+
+    // TODO 需要获取最新的 chaosblade 工具
+    getToolsInfo() {
+        const name = "chaosblade";
+        const version = "0.9.0";
+        const url = "https://chaosblade.oss-cn-hangzhou.aliyuncs.com/agent/github/0.9.0/chaosblade-0.9.0-linux-amd64.tar.gz";
+        return {name, version, url}
     }
 
     installProbe = (selectedRowKeys, applications) => {
         const {installProbeByAnsible} = this.props;
+        const {bladeDeployedSwitch} = this.state;
         let command = [];
         if (!_.isEmpty(applications)) {
             const {appName, groupName} = applications;
             command.push('-p', appName, '-g', groupName)
+        }
+        let tools = {}
+        if (bladeDeployedSwitch) {
+            tools = this.getToolsInfo();
         }
         const probes = [];
         selectedRowKeys.map(host => {
             probes.push({
                 host: host,
                 command: _.join(command, " "),
+                tools,
             });
         });
         installProbeByAnsible({probeType: "host", probes: probes})
-
         this.setState({current: 2})
         this.queryProbes()
     }
@@ -162,8 +180,7 @@ class AnsibleRegister extends React.Component {
             ansibleInstallationsLoading,
             probesInstallationsLoading
         } = this.props;
-        const {current, appSwitch, formVisible} = this.state;
-        const {loading, selectedRowKeys} = this.state;
+        const {current, appSwitch, bladeDeployedSwitch, formVisible, selectedRowKeys} = this.state;
         return (
             <Steps direction="vertical" current={current}>
                 <Step title="配置Ansible" description={
@@ -179,12 +196,16 @@ class AnsibleRegister extends React.Component {
                     <div>
                         <span>
                             选择下列机器进行安装，在安装时可以触发
-                            &nbsp;<Switch checkedChildren="开启" unCheckedChildren="关闭" defaultChecked={false}
+                            &nbsp;<Switch checkedChildren="开启" unCheckedChildren="关闭" defaultChecked={appSwitch}
                                           onChange={this.applicationSwitch}/>&nbsp;
                             开关选择是否开启或关闭应用信息配置，更多的应用信息介绍详见：
                             <a onClick={() => {
                                 console.log("跳转到应用接入页面")
-                            }}>应用接入说明</a>
+                            }}>应用接入说明</a>。
+                            <br/>
+                            所选择的机器默认会&nbsp;<Switch checkedChildren="开启" unCheckedChildren="关闭"
+                                                   defaultChecked={bladeDeployedSwitch}
+                                                   onChange={this.bladeDeployedSwitch}/>&nbsp;ChaosBlade 工具部署，可以选择开启或关闭来控制是否部署ChaosBlade工具。
                         </span>
                         <ApplicationForm visible={formVisible}
                                          hosts={selectedRowKeys}
@@ -258,7 +279,7 @@ const mapDispatchToProps = dispatch => {
         getAnsibleHosts: () => dispatch(Actions.getAnsibleHosts()),
         installProbeByAnsible: (values) => dispatch(Actions.installProbeByAnsible(values)),
         queryProbesInstallation: (probeIds) => dispatch(Actions.queryProbesInstallation(probeIds)),
-        clearAnsibleRegister: () => dispatch(Actions.clearAnsibleRegisterResult())
+        clearAnsibleRegister: () => dispatch(Actions.clearAnsibleRegisterResult()),
     }
 }
 

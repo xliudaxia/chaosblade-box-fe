@@ -45,6 +45,7 @@ class ExperimentDetail extends React.Component {
             clearExperimentDetailResult();
             history.push(`/experiment/task/?${request.generateUrlSearch({id: taskId})}`)
         }
+        return null;
     }
 
     componentDidMount() {
