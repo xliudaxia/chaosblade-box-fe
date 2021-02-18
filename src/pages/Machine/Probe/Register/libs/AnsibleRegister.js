@@ -59,14 +59,6 @@ class AnsibleRegister extends React.Component {
         this.setState({bladeDeployedSwitch: checked});
     };
 
-    // TODO 需要获取最新的 chaosblade 工具
-    getToolsInfo() {
-        const name = "chaosblade";
-        const version = "0.9.0";
-        const url = "https://chaosblade.oss-cn-hangzhou.aliyuncs.com/agent/github/0.9.0/chaosblade-0.9.0-linux-amd64.tar.gz";
-        return {name, version, url}
-    }
-
     installProbe = (selectedRowKeys, applications) => {
         const {installProbeByAnsible} = this.props;
         const {bladeDeployedSwitch} = this.state;
@@ -75,19 +67,14 @@ class AnsibleRegister extends React.Component {
             const {appName, groupName} = applications;
             command.push('-p', appName, '-g', groupName)
         }
-        let tools = {}
-        if (bladeDeployedSwitch) {
-            tools = this.getToolsInfo();
-        }
         const probes = [];
         selectedRowKeys.map(host => {
             probes.push({
                 host: host,
                 command: _.join(command, " "),
-                tools,
             });
         });
-        installProbeByAnsible({probeType: "host", probes: probes})
+        installProbeByAnsible({probeType: "host", probes: probes, deployBlade: bladeDeployedSwitch})
         this.setState({current: 2})
         this.queryProbes()
     }
