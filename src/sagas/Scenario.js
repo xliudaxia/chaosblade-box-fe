@@ -26,7 +26,7 @@ export default () => {
 
     function* watchGetScenarioById() {
         while (true) {
-            const scenarioId = yield take(Types.GET_SCENARIO_BY_ID);
+            const {scenarioId} = yield take(Types.GET_SCENARIO_BY_ID);
             yield fork(getScenarioById, scenarioId);
         }
     }

@@ -24,7 +24,6 @@ import ScenarioStep from "./ScenarioStep";
 import MonitorStep from "./MonitorStep";
 import NameStep from "./NameStep";
 import _ from "lodash";
-import {ScenarioConstants} from "../../../constants/ScenarioConstants";
 
 const {Step} = Steps;
 
@@ -122,24 +121,20 @@ class ExperimentSteps extends React.Component {
             dimension,
             createExperiment,
             collect,
-            scenarioCategoryIdSelected
+            scenarioCategoryIdSelected,
+            machinesSelected
         } = this.props;
-        let machines = [];
-        if (dimension === ScenarioConstants.SUPPORT_HOST_SCOPE.desc) {
-            machines = this.getMachines();
-        }
         createExperiment({
             categoryId: scenarioCategoryIdSelected,
             scenarioId: scenarioSelected.scenarioId,
             parameters: scenarioSelected.parameters,
             metrics: metricSelected ? [metricSelected] : [],
             experimentName,
-            machines,
+            machines: machinesSelected,
             dimension,
             collect,
         });
     }
-
 
     updateExperiment = () => {
         const {
@@ -149,12 +144,9 @@ class ExperimentSteps extends React.Component {
             dimension,
             updateExperiment,
             collect,
-            scenarioCategoryIdSelected
+            scenarioCategoryIdSelected,
+            machinesSelected
         } = this.props;
-        let machines = [];
-        if (dimension === ScenarioConstants.SUPPORT_HOST_SCOPE.desc) {
-            machines = this.getMachines();
-        }
         updateExperiment({
             experimentId: ExperimentCreating.getExperimentId(),
             categoryId: scenarioCategoryIdSelected,
@@ -162,7 +154,7 @@ class ExperimentSteps extends React.Component {
             parameters: scenarioSelected.parameters,
             metrics: metricSelected ? [metricSelected] : [],
             experimentName,
-            machines,
+            machines: machinesSelected,
             dimension,
             collect,
         })

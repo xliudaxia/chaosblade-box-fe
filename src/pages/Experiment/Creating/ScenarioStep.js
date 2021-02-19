@@ -110,17 +110,8 @@ class ScenarioStep extends React.Component {
     }
 
     onScenarioSelect = (scenario) => {
-        const {scenarioSelected, onScenarioChanged} = this.props;
-        if (scenarioSelected !== null && scenario.scenarioId === scenarioSelected.scenarioId) {
-            scenario.parameters.map(scenarioParam => {
-                scenarioSelected.parameters.map(selectedParam => {
-                    if (scenarioParam.name === selectedParam.name) {
-                        scenarioParam.value = selectedParam.value;
-                    }
-                });
-            })
-        }
-        onScenarioChanged({scenario});
+        const {getScenarioById, machinesSelected, dimension} = this.props;
+        getScenarioById({scenarioId: scenario.scenarioId, dimension, machines: machinesSelected})
     }
 
     scenarioCategoryTreeRender(data) {
@@ -188,7 +179,7 @@ class ScenarioStep extends React.Component {
     }
 
     getScenarioParameterValues() {
-        const {scenarioSelected, dimension, machinesSelected} = this.props;
+        const {scenarioSelected} = this.props;
         if (scenarioSelected === null) {
             return {};
         }
@@ -199,20 +190,6 @@ class ScenarioStep extends React.Component {
         scenarioSelected.parameters.map(param => {
             params[param.name] = param.value
         });
-        // TODO 需要考虑不同 namespace 的情况
-        if (!_.isEmpty(machinesSelected)) {
-            const machine = machinesSelected[0];
-            switch (dimension) {
-                case "pod":
-                    if (!_.isEmpty(machine.pods)) {
-                        params["names"]=machine.pods;
-                    }
-                    if (!_.isEmpty(machine.namespace)) {
-                        params["namespace"]=machine.namespace;
-                    }
-                    break;
-            }
-        }
         return params;
     }
 
@@ -291,7 +268,8 @@ class ScenarioStep extends React.Component {
                                                             <Form.Item label={param.name} name={param.name}
                                                                        help={param.description}
                                                                        rules={[{required: param.required ? true : false}]}>
-                                                                <Input/>
+                                                                <Input disabled={param.component ?
+                                                                    param.component.editable ? false : true : false}/>
                                                             </Form.Item>
                                                         )}
                                                     </Form>
@@ -333,6 +311,7 @@ const mapDispatchToProps = dispatch => {
         onScenarioCategoryChanged: categoryId => dispatch(Actions.onScenarioCategoryChanged(categoryId)),
         onScenarioChanged: scenario => dispatch(Actions.onScenarioChanged(scenario)),
         handleError: (code, message) => dispatch(Actions.handleError(code, message)),
+        getScenarioById: scenarioId => dispatch(Actions.getScenarioById(scenarioId)),
     }
 }
 

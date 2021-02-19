@@ -16,12 +16,21 @@
 
 import React from "react";
 import Actions from "../../../actions/Actions";
-import {AndroidOutlined, AppleOutlined, QuestionCircleOutlined} from "@ant-design/icons";
-import {Alert, Button, Form, Input, Layout, Menu, Tabs, Tooltip} from "antd";
+import {
+    AndroidOutlined,
+    AppleOutlined,
+    MinusCircleOutlined,
+    PlusOutlined,
+    QuestionCircleOutlined
+} from "@ant-design/icons";
+import {Alert, Button, Form, Input, Layout, Menu, Space, Tabs, Tooltip} from "antd";
 import {connect} from "react-redux";
 import ExperimentSteps from "./ExperimentSteps";
 import MachineStep from "./MachineStep";
 import {GenPagination} from "../../../libs/Pagination";
+import ExperimentCreating from "./index";
+import _ from 'lodash'
+import {ExperimentCreatingTabKey} from "../../../constants/ExperimentConstants";
 
 const {TabPane} = Tabs
 const {TextArea} = Input
@@ -48,13 +57,24 @@ class KubernetesExperiment extends React.Component {
 
     constructor() {
         super();
-        this.state = {
-            podNamespace: "",
-            podNames: "",
-            containerNames: "",
-            containerIndex: "",
-            nodeNames: "",
-            tabKey: "container", // container | pod | node
+    }
+
+    getMachinesByDimension(activeKey) {
+        const {
+            getPodsPageable,
+            getNodesPageable,
+            podPage,
+            podPageSize,
+            nodePage,
+            nodePageSize
+        } = this.props;
+        switch (activeKey) {
+            case ExperimentCreatingTabKey.NODE:
+                getNodesPageable({page: nodePage, pageSize: nodePageSize});
+                break;
+            case ExperimentCreatingTabKey.CONTAINER:
+            case ExperimentCreatingTabKey.POD:
+                getPodsPageable({page: podPage, pageSize: podPageSize});
         }
     }
 
@@ -62,51 +82,23 @@ class KubernetesExperiment extends React.Component {
         const {
             getClusterInfo,
             queryCollectStatus,
-            getPodsPageable,
-            getNodesPageable,
-            podPage,
-            podPageSize,
-            nodePage,
-            nodePageSize,
             onDimensionChanged,
+            dimension
         } = this.props
+        const id = ExperimentCreating.getExperimentId();
         queryCollectStatus();
         getClusterInfo();
-        getPodsPageable({page: podPage, pageSize: podPageSize});
-        getNodesPageable({page: nodePage, pageSize: nodePageSize});
-        onDimensionChanged({dimension: defaultActive});
-    }
-
-    podNamespaceValueChange = (value) => {
-        this.setState({podNamespace: value})
-    }
-
-    podNamesValueChange = (value) => {
-        this.setState({podNames: value})
-    }
-
-    containerNamesValueChange = (value) => {
-        this.setState({containerNames: value})
-    }
-
-    containerIndexValueChange = (value) => {
-        this.setState({containerIndex: value})
-    }
-
-
-    nodeNamesValueChange = (value) => {
-        this.setState({nodeNames: value})
+        let activeKey = dimension;
+        if (_.isEmpty(id) && _.isEmpty(dimension)) {
+            activeKey = defaultActive
+            onDimensionChanged({dimension: activeKey});
+        }
+        this.getMachinesByDimension(activeKey);
     }
 
     onFinish = (values) => {
-        const machine = {
-            namespace: values.namespace,
-            pods: values.pods,
-            containerName: values.containerName,
-            containerIndex: values.containerIndex,
-        }
         const {onMachinesChanged} = this.props;
-        onMachinesChanged({machines: [machine]});
+        onMachinesChanged({machines: values.machines});
     }
 
     collectContainersEnabledRender = () => {
@@ -133,45 +125,76 @@ class KubernetesExperiment extends React.Component {
         );
     }
 
-    collectContainersDisabledRender = () => {
+    collectDisabledRender = () => {
+        const {dimension, machinesSelected} = this.props;
+        console.log(machinesSelected);
         return (
             <div>
-                <Form {...FormLayout} ref={this.formRef} name="control-ref" onFinish={this.onFinish}>
-                    <Form.Item name="namespace" label="namespace" help={PodNamespaceTips}
-                               rules={[{required: true}]}>
-                        <Input onChange={this.podNamespaceValueChange}/>
-                    </Form.Item>
-                    <Form.Item name="pods" label="pods" help={PodNameTips} rules={[{required: true}]}>
-                        <TextArea onChange={this.podNamesValueChange}/>
-                    </Form.Item>
-                    <Form.Item name="containerName" label="containerName" help={ContainerNameTips}
-                               rules={[{required: false}]}>
-                        <Input onChange={this.containerNamesValueChange}/>
-                    </Form.Item>
-                    <Form.Item name="containerIndex" label="containerIndex" help={ContainerIndexTips}
-                               rules={[{required: false}]}>
-                        <Input onChange={this.containerNamesValueChange}/>
-                    </Form.Item>
-                </Form>
-            </div>
-        )
-    }
-
-    collectPodsDisabledRender = () => {
-        return (
-            <div>
-                <Form {...FormLayout} ref={this.formRef} name="control-ref" onFinish={this.onFinish}>
-                    <Form.Item name="namespace" label="namespace" help={PodNamespaceTips}
-                               rules={[{required: true}]}>
-                        <Input onChange={this.podNamespaceValueChange}/>
-                    </Form.Item>
-                    <Form.Item name="pods" label="pods" help={PodNameTips} rules={[{required: true}]}>
-                        <TextArea onChange={this.podNamesValueChange}/>
-                    </Form.Item>
-                    <Form.Item name="container" label="container" help={ContainerNameTips}
-                               rules={[{required: false}]}>
-                        <Input onChange={this.containerNamesValueChange}/>
-                    </Form.Item>
+                <Form ref={this.formRef} name="control-ref" onFinish={this.onFinish}
+                      initialValues={{machines: machinesSelected}}>
+                    <Form.List name={'machines'}>
+                        {
+                            (fields, {add, remove}) => (
+                                <>
+                                    {
+                                        fields.map(field => (
+                                            dimension === ExperimentCreatingTabKey.NODE ?
+                                                <Space key={field.key} style={{padding: 16}} align="baseline">
+                                                    <Form.Item {...field}
+                                                               fieldKey={[field.fieldKey, 'nodeName']}
+                                                               name={[field.name, 'nodeName']}
+                                                               label="nodeName"
+                                                               help={NodeNameTips}
+                                                               rules={[{required: true}]}>
+                                                        <Input/>
+                                                    </Form.Item>
+                                                    <MinusCircleOutlined onClick={() => remove(field.name)}/>
+                                                </Space>
+                                                :
+                                                <Space key={field.key} style={{padding: 16}} align="baseline">
+                                                    <Form.Item {...field}
+                                                               fieldKey={[field.fieldKey, 'namespace']}
+                                                               name={[field.name, 'namespace']}
+                                                               label="namespace"
+                                                               help={PodNamespaceTips}
+                                                               rules={[{required: true}]}>
+                                                        <Input/>
+                                                    </Form.Item>
+                                                    <Form.Item {...field}
+                                                               fieldKey={[field.fieldKey, 'podName']}
+                                                               name={[field.name, 'podName']}
+                                                               label="podName"
+                                                               help={PodNameTips}
+                                                               rules={[{required: true}]}>
+                                                        <Input/>
+                                                    </Form.Item>
+                                                    {
+                                                        dimension === ExperimentCreatingTabKey.CONTAINER
+                                                            ?
+                                                            <Form.Item {...field}
+                                                                       fieldKey={[field.fieldKey, 'containerName']}
+                                                                       name={[field.name, 'containerName']}
+                                                                       label="containerName"
+                                                                       help={ContainerNameTips}
+                                                                       rules={[{required: false}]}>
+                                                                <Input/>
+                                                            </Form.Item>
+                                                            :
+                                                            <></>
+                                                    }
+                                                    <MinusCircleOutlined onClick={() => remove(field.name)}/>
+                                                </Space>
+                                        ))
+                                    }
+                                    <Form.Item>
+                                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                                            Add field
+                                        </Button>
+                                    </Form.Item>
+                                </>
+                            )
+                        }
+                    </Form.List>
                     <Form.Item>
                         <Button type="primary" htmlType="submit">提交（临时方案）</Button>
                     </Form.Item>
@@ -226,58 +249,51 @@ class KubernetesExperiment extends React.Component {
         );
     };
 
-    collectNodesDisabledRender = () => {
-        return (
-            <div>
-                <Form {...FormLayout} ref={this.formRef} name="control-ref" onFinish={this.onFinish}>
-                    <Form.Item name="nodeName" label="nodeName" help={NodeNameTips}
-                               rules={[{required: true}]}>
-                        <Input onChange={this.nodeNamesValueChange}/>
-                    </Form.Item>
-                </Form>
-            </div>
-        );
-    };
-
     machinesRender = () => {
-        const {collect} = this.props;
+        const {collect, dimension} = this.props;
         return (
-            <Tabs defaultActiveKey={defaultActive} onChange={this.onTargetTabChange}>
-                <TabPane tab={<span><AndroidOutlined/>创建 Container 实验</span>} key="container">
-                    {
-                        collect ? this.collectContainersEnabledRender() : this.collectContainersDisabledRender()
-                    }
-                </TabPane>
-                <TabPane tab={<span><AppleOutlined/>创建 POD 实验</span>} key="pod">
-                    {
-                        collect ? this.collectPodsEnabledRender() : this.collectPodsDisabledRender()
-                    }
-                </TabPane>
-                <TabPane tab={<span> <AndroidOutlined/>创建 NODE 实验</span>} key="node">
-                    {
-                        collect ? this.collectNodesEnabledRender() : this.collectNodesDisabledRender()
-                    }
-                </TabPane>
-            </Tabs>
+            dimension ?
+                <Tabs defaultActiveKey={dimension} onChange={this.onTargetTabChange}>
+                    <TabPane tab={<span><AndroidOutlined/>创建 Container 实验</span>} key="container">
+                        {
+                            collect ? this.collectContainersEnabledRender() : this.collectDisabledRender()
+                        }
+                    </TabPane>
+                    <TabPane tab={<span><AppleOutlined/>创建 POD 实验</span>} key="pod">
+                        {
+                            collect ? this.collectPodsEnabledRender() : this.collectDisabledRender()
+                        }
+                    </TabPane>
+                    <TabPane tab={<span> <AndroidOutlined/>创建 NODE 实验</span>} key="node">
+                        {
+                            collect ? this.collectNodesEnabledRender() : this.collectDisabledRender()
+                        }
+                    </TabPane>
+                </Tabs>
+                :
+                <div></div>
         );
     }
 
     onTargetTabChange = current => {
         const {onDimensionChanged} = this.props;
+        this.getMachinesByDimension(current);
         onDimensionChanged({dimension: current});
     }
 
     render() {
         const {collect, dimension} = this.props;
         return (
-            <ExperimentSteps dimension={dimension}
-                             machineStep={
-                                 <div>
-                                     {collect ? EnableCollectAlert : DisableCollectAlert}
-                                     {this.machinesRender()}
-                                 </div>
-                             }
-            />
+            dimension ?
+                <ExperimentSteps dimension={dimension}
+                                 machineStep={
+                                     <div>
+                                         {collect ? EnableCollectAlert : DisableCollectAlert}
+                                         {this.machinesRender()}
+                                     </div>
+                                 }
+                /> :
+                <div></div>
         );
     }
 
@@ -297,7 +313,9 @@ const mapStateToProps = state => {
         nodeTotal: nodes.total,
         nodes: nodes.machines,
         collect: experiment.collect,
-        dimension: experiment.disabled,
+        // collect: false,
+        dimension: experiment.dimension,
+        machinesSelected: experiment.machinesSelected
     }
 }
 

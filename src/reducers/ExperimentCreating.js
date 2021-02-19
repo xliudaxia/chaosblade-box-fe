@@ -48,7 +48,7 @@ export const INITIAL_STATE = Map({
     },
     categories: [],
     experimentId: "",
-    dimension: "host",
+    dimension: "",
     scenarios: {
         loading: false,
         page: 1,
@@ -78,7 +78,7 @@ const handleMachinesFetchingResult = (state, action) => {
         let _machines = _.orderBy(machines, ['status'], ['desc'])
         _machines.map(machine => {
             items.push({
-                key: machine.machineId + "-" + machine.ip,
+                key: machine.machineId + "/" + machine.ip,
                 title: machine.ip,
                 ip: machine.ip,
                 hostname: machine.hostname,
@@ -89,7 +89,6 @@ const handleMachinesFetchingResult = (state, action) => {
     }
     return state.merge({loading: false, hosts: {machines: items, pageSize, page, total}})
 }
-
 const handlePodsFetchingResult = (state, action) => {
     if (_.isEmpty(action.pageableData)) {
         return state.merge({loading: false});
@@ -98,18 +97,17 @@ const handlePodsFetchingResult = (state, action) => {
     let items = [];
     let containers = [];
     if (!_.isEmpty(machines)) {
-        let _machines = _.orderBy(machines, ['status'], ['desc'])
+        let _machines = _.orderBy(machines, ['status'], ['asc'])
         _machines.map(machine => {
             items.push({
-                key: machine.machineId + "-" + machine.podName,
+                key: machine.namespace + "/" + machine.podName,
                 title: machine.podName,
-                podName: machine.podName,
                 description: machine.podName,
                 disabled: machine.status !== MachineConstants.MACHINE_STATUS_ONLINE.code,
             })
             machine.containers.map(container => {
                 containers.push({
-                    key: machine.machineId + "-" + container.containerName,
+                    key: _.join([machine.namespace, machine.podName, container.containerName], '/'),
                     title: container.containerName + "[" + machine.podName + "]",
                     description: machine.podName + "-" + container.containerName,
                     disabled: machine.status !== MachineConstants.MACHINE_STATUS_ONLINE.code,
@@ -130,9 +128,8 @@ const handleNodesFetchingResult = (state, action) => {
         let _machines = _.orderBy(machines, ['status'], ['desc'])
         _machines.map(machine => {
             items.push({
-                key: machine.machineId + "-" + machine.nodeName,
+                key: machine.nodeName,
                 title: machine.nodeName,
-                nodeName: machine.nodeName,
                 description: machine.nodeName,
                 disabled: machine.status !== MachineConstants.MACHINE_STATUS_ONLINE.code,
             })
@@ -200,7 +197,7 @@ const clearExperimentCreatingResult = (state, action) => {
         },
         categories: [],
         experimentId: "",
-        dimension: "host",
+        dimension: "",
         scenarios: {
             loading: false,
             page: 1,
@@ -233,10 +230,7 @@ const getExperimentById = (state, action) => {
     if (!_.isEmpty(metrics)) {
         metricSelected = metrics[0];
     }
-    let machinesSelected = [];
-    if (!_.isEmpty(machines)) {
-        machines.map(machine => machinesSelected.push(machine.machineId + "-" + machine.ip));
-    }
+    let machinesSelected = machines;
     return state.merge({
         dimension: dimension ? dimension : "host",
         experimentId,
@@ -250,7 +244,7 @@ const getExperimentById = (state, action) => {
 
 const creatingFromMachine = (state, action) => {
     const {dimension, machineId, machineIp} = action.data;
-    const machinesSelected = [machineId + "-" + machineIp];
+    const machinesSelected = [machineId + "/" + machineIp];
     return state.merge({dimension, machinesSelected});
 }
 
@@ -307,6 +301,13 @@ const onDimensionChanged = (state, action) => {
     return state.merge({dimension});
 }
 
+const getScenarioById = (state, action) => {
+    if (_.isEmpty(action.data)) {
+        return state.merge({scenarioSelected: null});
+    }
+    return state.merge({scenarioSelected: action.data});
+}
+
 const ACTION_HANDLERS = {
     [Types.GET_MACHINES_FOR_HOST_PAGEABLE]: handleMachinesFetching,
     [Types.GET_MACHINES_FOR_HOST_PAGEABLE_RESULT]: handleMachinesFetchingResult,
@@ -328,6 +329,7 @@ const ACTION_HANDLERS = {
     [Types.ON_DIMENSION_CHANGED]: onDimensionChanged,
     [Types.GET_MACHINES_FOR_POD_PAGEABLE_RESULT]: handlePodsFetchingResult,
     [Types.GET_MACHINES_FOR_NODE_PAGEABLE_RESULT]: handleNodesFetchingResult,
+    [Types.GET_SCENARIO_BY_ID_RESULT]: getScenarioById,
 };
 
 export default createReducer(INITIAL_STATE, ACTION_HANDLERS);
