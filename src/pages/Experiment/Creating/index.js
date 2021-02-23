@@ -86,9 +86,8 @@ class ExperimentCreating extends React.Component {
     }
 
     onTabChange(key) {
-        const {dimension, clearResult, onDimensionChanged} = this.props;
+        const {dimension, onDimensionChanged} = this.props;
         if (key !== dimension) {
-            // clearResult();
             if (key === ExperimentCreatingTabKey.KUBERNETES) {
                 key = ExperimentCreatingTabKey.POD;
             }

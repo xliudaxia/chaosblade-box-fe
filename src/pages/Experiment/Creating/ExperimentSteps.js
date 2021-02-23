@@ -81,9 +81,6 @@ class ExperimentSteps extends React.Component {
     onCreatingNext = () => {
         const current = this.state.current + 1;
         switch (current) {
-            // case 1:
-            //     this._machine.onFinish(this.changeCurrent.bind(this, current));
-            //     break;
             case 2:
                 this._scenario.onFinish(this.changeCurrent.bind(this, current));
                 break;
@@ -186,6 +183,7 @@ class ExperimentSteps extends React.Component {
                                     // // <Element dimension={dimension} current={current} event={this.machineEvent}/>
                                     machineStep
                                 }
+
                             </div>
                             :
                             <div className={styles.step}></div>

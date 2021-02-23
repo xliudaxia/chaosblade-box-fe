@@ -142,7 +142,19 @@ const getScenarioCategories = (state, action) => {
     if (_.isEmpty(action.data)) {
         return state;
     }
-    return state.merge({categories: action.data});
+    const categories = action.data;
+    let current = state.toJS();
+    if (current.scenarioCategoryIdSelected === '') {
+        let firstCategoryId = categories[0].categoryId;
+        for (let i = 0; i < categories.length; i++) {
+            if (categories[i].parentId !== '') {
+                firstCategoryId = categories[i].categoryId;
+                break;
+            }
+        }
+        return state.merge({categories, scenarioCategoryIdSelected: firstCategoryId});
+    }
+    return state.merge({categories});
 }
 
 const createExperiment = (state, action) => {
@@ -248,15 +260,6 @@ const creatingFromMachine = (state, action) => {
     return state.merge({dimension, machinesSelected});
 }
 
-const creatingFromScenario = (state, action) => {
-    if (_.isEmpty(action.data)) {
-        return state;
-    }
-    const {categoryId, scenarioId} = action.data;
-    const scenario = {categoryId, scenarioId}
-    return state.merge({scenarioSelected: scenario})
-}
-
 const queryMetricCategory = (state, action) => {
     if (_.isEmpty(action.data)) {
         return state;
@@ -318,7 +321,6 @@ const ACTION_HANDLERS = {
     [Types.CLEAR_EXPERIMENT_CREATING_RESULT]: clearExperimentCreatingResult,
     [Types.GET_EXPERIMENT_BY_ID_RESULT]: getExperimentById,
     [Types.CREATING_FROM_MACHINE_RESULT]: creatingFromMachine,
-    [Types.CREATING_FROM_SCENARIO_RESULT]: creatingFromScenario,
     [Types.QUERY_METRIC_CATEGORY_RESULT]: queryMetricCategory,
     [Types.QUERY_COLLECT_STATUS_RESULT]: queryCollectStatus,
     [Types.ON_SCENARIO_CATEGORY_CHANGED]: onScenarioCategoryChanged,

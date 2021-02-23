@@ -35,7 +35,7 @@ class ScenarioInfoForm extends React.Component {
 
     componentDidMount() {
         const {getScenarioCategories} = this.props;
-        getScenarioCategories()
+        getScenarioCategories({});
     }
 
     onCancel = () => {

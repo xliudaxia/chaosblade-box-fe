@@ -21,6 +21,7 @@ import Actions from '../actions/Actions'
 import ScenarioApi from "../services/ScenarioApi";
 import {Errors} from "../constants/Errors";
 import {getError} from "./response";
+import {ScenarioConstants} from "../constants/ScenarioConstants";
 
 export default () => {
 
@@ -160,6 +161,31 @@ export default () => {
                 let data = response.data;
                 if (data.success) {
                     yield put(Actions.getScenarioCategoriesResult(data.data));
+                    console.log(query);
+                    const scenarioCategoryIdSelected = query.scenarioCategoryIdSelected;
+                    const dimension = query.dimension;
+                    if (scenarioCategoryIdSelected !== null || scenarioCategoryIdSelected !== undefined) {
+                        let categoryId = scenarioCategoryIdSelected;
+                        if (categoryId === '') {
+                            const categories = data.data;
+                            categoryId = categories[0].categoryId;
+                            for (let i = 0; i < categories.length; i++) {
+                                if (categories[i].parentId !== '') {
+                                    categoryId = categories[i].categoryId;
+                                    break;
+                                }
+                            }
+                        }
+                        yield put(Actions.getScenariosPageable(
+                            {
+                                categoryId: categoryId,
+                                scopeType: dimension,
+                                status: ScenarioConstants.STATUS_PUBLISH.code,
+                                page: 1,
+                                pageSize: 10,
+                            }
+                        ))
+                    }
                 } else {
                     error = getError(data);
                 }
