@@ -21,7 +21,7 @@ import _ from 'lodash';
 
 export const INITIAL_STATE = Map({
     locale: 'zh',
-    version: 'v0.3.0',
+    version: 'v0.3.2',
 });
 
 const querySystemInfo = (state, action) => {
