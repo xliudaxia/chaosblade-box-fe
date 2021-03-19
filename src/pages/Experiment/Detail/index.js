@@ -107,7 +107,7 @@ class ExperimentDetail extends React.Component {
     }
 
     experimentInfoRender = () => {
-        const {experimentName, taskCount, createTime, lastTaskCreateTime, lastTaskStatus, lastTaskResult} = this.props;
+        const {experimentName, taskCount, createTime, lastTaskStartTime, lastTaskStatus, lastTaskResult} = this.props;
         return (
             <Descriptions title={<FormattedMessage id={'page.experiment.detail.info'}/>}
                           extra={this.experimentOperationRender()}>
@@ -119,7 +119,7 @@ class ExperimentDetail extends React.Component {
                     id={'page.experiment.detail.info.taskCount'}/>}>{taskCount ? taskCount : 0}</Descriptions.Item>
                 <Descriptions.Item
                     label={<FormattedMessage
-                        id={'page.experiment.detail.info.latestTaskCreateTime'}/>}>{lastTaskCreateTime ? lastTaskCreateTime :
+                        id={'page.experiment.detail.info.latestTaskCreateTime'}/>}>{lastTaskStartTime ? lastTaskStartTime :
                     <FormattedMessage id={'page.experiment.detail.info.status.waiting'}/>}</Descriptions.Item>
                 <Descriptions.Item label={<FormattedMessage id={'page.experiment.detail.info.latestTaskStatus'}/>}>
                     {TaskInfo.statusRender(lastTaskStatus, lastTaskResult)}
@@ -211,7 +211,7 @@ class ExperimentDetail extends React.Component {
                         {/*                   span={2}>{monitor.component ? monitor.component.chart : 'unknown'}</Descriptions.Item>*/}
                         <Descriptions.Item
                             label={<FormattedMessage id={'page.experiment.detail.monitor.state.expected'}/>} span={2}>{
-                            <FormattedMessage id={'page.experiment.detail.monitor.expected'}/>}</Descriptions.Item>
+                            <FormattedMessage id={'page.experiment.detail.monitor.state.expected'}/>}</Descriptions.Item>
                         <Descriptions.Item
                             label={<FormattedMessage id={'page.experiment.detail.monitor.state.protect'}/>}
                             span={2}><FormattedMessage
@@ -321,7 +321,7 @@ const mapStateToProps = state => {
         taskCount: detail.taskCount,
         dimension: detail.dimension,
         createTime: detail.createTime,
-        lastTaskCreateTime: detail.lastTaskCreateTime,
+        lastTaskStartTime: detail.lastTaskStartTime,
         lastTaskStatus: detail.lastTaskStatus,
         lastTaskResult: detail.lastTaskResult,
         machines: detail.machines,
